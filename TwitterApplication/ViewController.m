@@ -26,6 +26,7 @@ BOOL flag;
 {
     [super viewDidLoad];
 	// Do any additional setup after loading the view, typically from a nib.
+   
     Reachability *reachability = [Reachability reachabilityForInternetConnection];
     NetworkStatus networkStatus = [reachability currentReachabilityStatus];
     if (networkStatus == ReachableViaWWAN) {
@@ -102,11 +103,10 @@ BOOL flag;
                                          JSONObjectWithData:responseData
                                          options:NSJSONReadingMutableLeaves
                                          error:&error];
-                      //  self.dataSource =
                       
                       if (self.dataSource.count != 0) {
                           // NSLog(@"Ok");
-                          //NSLog(@"%@", self.dataSource);
+                          NSLog(@"%@", self.dataSource);
                           dispatch_async(dispatch_get_main_queue(), ^{
                               [self.tweetTableView reloadData];
                           });
@@ -149,14 +149,10 @@ BOOL flag;
                 initWithStyle:UITableViewCellStyleDefault reuseIdentifier:CellIdentifier];
     }
     
-    
+    cell.button.hidden = YES;
     if (flag==true) { //if we have internet
         static int count = 0;
         NSDictionary *tweet = self.dataSource[indexPath.row];
-        
-       
-        
-        
         
         
         // WRITE TO PLIST
@@ -185,17 +181,25 @@ BOOL flag;
             });
         });
         
-        if([tweet valueForKeyPath:@"place.name"]!=nil)
-            cell.location.text = [tweet valueForKeyPath:@"place.name"];
-        else cell.location.text = @"undefinied";
-//         for(NSDictionary *dic in tweet)
-//             NSLog(@"%@", [dic valueForKeyPath:@"place.name"]);
+        
+        for (NSDictionary *dic in tweet)
+        {
+            if([dic valueForKeyPath:@"place"]!=nil) {
+                           cell.button.hidden = NO;
+                           cell.location.text = [dic valueForKeyPath:@"geo.coordinates"];
+                           break;
+                       } else cell.button.hidden = YES;
+        }
+//        if([tweet valueForKeyPath:@"geo.coordinates"]!=nil) {
+//            cell.button.hidden = NO;
+//            cell.location.text = [tweet valueForKeyPath:@"user.name"];
+//        } else cell.button.hidden = YES;
+//
         return cell;
         
     } else { // NO INTERNET
         
         // READ FROM PLIST
-        //        NSDictionary *tweet2;
         NSData *data2 = [[NSMutableData alloc] initWithContentsOfFile:@"/Users/rinarish/Desktop/TwitterApplication/TwitterApplication/Tweets.plist"];
         NSKeyedUnarchiver *unarchiver = [[NSKeyedUnarchiver alloc] initForReadingWithData:data2];
         //NSNumber *localCount = [unarchiver decodeObjectForKey:@"count"];
@@ -218,10 +222,6 @@ BOOL flag;
 #pragma mark - UITableView Delegate
 
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
-    
-    //    DetailViewController *vc = [[DetailViewController alloc] init];
-    //    vc.tweetDetail = [[self.dataSource objectAtIndex:[indexPath row]] valueForKeyPath:@"text"];
-    //
     
 }
 
@@ -251,6 +251,13 @@ BOOL flag;
     
 }
 
+-(void)reloadTweets
+{
+   //load the tweets from the internet, and only then reload the table
+    [self getTimeLine];
+    [self.tweetTableView reloadData];
+}
+
 
 - (IBAction)postNewTweet:(id)sender {
     if ([SLComposeViewController isAvailableForServiceType:SLServiceTypeTwitter])
@@ -260,10 +267,12 @@ BOOL flag;
         //[tweetSheet addImage:[UIImage imageNamed:@"/Applications/iPhoto.app"]];
         
         [self presentViewController:tweetSheet animated:YES completion:nil];
-        dispatch_async(dispatch_get_main_queue(), ^{
-            [self.tweetTableView reloadData];
-        });
-        
+        [tweetSheet setCompletionHandler:^ (SLComposeViewControllerResult result)
+        {
+           // dispatch_async(dispatch_get_main_queue(), ^{
+                [self reloadTweets];
+           // });
+        }];
     }
     else
     {
