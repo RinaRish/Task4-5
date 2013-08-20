@@ -11,4 +11,6 @@
 
 @interface MapViewController : ViewController <MKMapViewDelegate>
 
+@property (strong, nonatomic) NSArray *loc;
+
 @end

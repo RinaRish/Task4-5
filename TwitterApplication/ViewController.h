@@ -12,6 +12,7 @@
 
 @property (strong, nonatomic) IBOutlet UITableView *tweetTableView;
 @property (strong, nonatomic) NSArray *dataSource;
+@property (strong, nonatomic) NSArray *coordinates;
 
 
 - (IBAction)postNewTweet:(id)sender;

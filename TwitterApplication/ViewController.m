@@ -13,6 +13,7 @@
 #import "TweetCell.h"
 #import "DetailViewController.h"
 #import "Reachability.h"
+#import "MapViewController.h"
 
 @interface ViewController ()
 
@@ -181,20 +182,29 @@ BOOL flag;
             });
         });
         
-        
-        for (NSDictionary *dic in tweet)
+        // LOCATION
+        for (NSDictionary *dic in self.dataSource)
         {
-            if([dic valueForKeyPath:@"place"]!=nil) {
-                           cell.button.hidden = NO;
-                           cell.location.text = [dic valueForKeyPath:@"geo.coordinates"];
-                           break;
-                       } else cell.button.hidden = YES;
+           
+            NSString *str = [dic valueForKeyPath:@"place.name"];
+           // NSString *str = [[dic valueForKeyPath:@"place.name"] lastObject];
+            if(str)
+            {
+                NSLog(@"%@", str);
+                cell.button.hidden = NO;
+                cell.location.text = [dic valueForKeyPath:@"place.name"];
+                self.coordinates = [dic valueForKeyPath:@"geo.coordinates"];
+                break;
+            } else {
+                
+                NSLog(@"nothing");
+                cell.button.hidden = YES;
+                cell.location.hidden = YES;
+                break;
+            }
+
         }
-//        if([tweet valueForKeyPath:@"geo.coordinates"]!=nil) {
-//            cell.button.hidden = NO;
-//            cell.location.text = [tweet valueForKeyPath:@"user.name"];
-//        } else cell.button.hidden = YES;
-//
+
         return cell;
         
     } else { // NO INTERNET
@@ -247,6 +257,11 @@ BOOL flag;
             //vc.tweetDetail = [tweet2[[self.tweetTableView indexPathForSelectedRow].row] valueForKeyPath:@"text"];//[[self.tableView indexPathForSelectedRow].row]; //@"My label";
             
         }
+    }
+    else if ([segue.identifier isEqualToString:@"Map"]){
+        MapViewController *vc2 = (MapViewController *)segue.destinationViewController;
+        vc2.loc = [self.dataSource[[self.tweetTableView indexPathForSelectedRow].row] valueForKeyPath:@"geo.coordinates"];
+        
     }
     
 }
